@@ -8,15 +8,13 @@ run_in_venv = run_in_windows_venv if host.os == "windows" else run_in_posix_venv
 
 python = "python" if os.look_path("python") != None else "python3"
 
-def pip_venv(name, dir_label):
-    dir_path = path(dir_label)
+def pip_venv(name, dir_label=None, docs=None):
+    (dir_path, _) = contains(path(dir_label or ""))
 
-    @target(name=name, sources=[os.path.join(dir_path, "requirements.txt")], generates=[os.path.join(dir_path, "venv")])
+    docs = docs or "Creates a venv and installs dependencies using pip"
+
+    @target(name=name, docs=docs, sources=[os.path.join(dir_path, "requirements.txt")], generates=[os.path.join(dir_path, "venv")])
     def venv():
-        """
-        Creates a venv and installs dependencies using pip.
-        """
-
         sh.exec(f"{python} -m venv venv")
         run_in_venv(f"{python} -m pip install -r requirements.txt")
 
