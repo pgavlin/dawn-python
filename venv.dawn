@@ -1,21 +1,22 @@
-def run_in_posix_venv(cmd):
-    sh.exec(f". venv/bin/activate && {cmd}")
+def run_in_posix_venv(cmd, cwd=None):
+    sh.exec(f". venv/bin/activate && {cmd}", cwd=cwd)
 
-def run_in_windows_venv(cmd):
-    os.exec(["powershell", "-Command", f"& {{./venv/scripts/activate.ps1; {cmd}}}"])
+def run_in_windows_venv(cmd, cwd=None):
+    os.exec(["powershell", "-Command", f"& {{./venv/scripts/activate.ps1; {cmd}}}"], cwd=cwd)
 
 run_in_venv = run_in_windows_venv if host.os == "windows" else run_in_posix_venv
 
 python = "python" if os.look_path("python") != None else "python3"
 
 def pip_venv(name, dir_label=None, docs=None):
-    (dir_path, _) = contains(path(dir_label or ""))
+    os_dir_path = path(dir_label or "")
+    (project_dir_path, _) = contains(os_dir_path)
 
     docs = docs or "Creates a venv and installs dependencies using pip"
 
-    @target(name=name, docs=docs, sources=[os.path.join(dir_path, "requirements.txt")], generates=[os.path.join(dir_path, "venv")])
+    @target(name=name, docs=docs, sources=[f"{project_dir_path}/requirements.txt"], generates=[f"{project_dir_path}/venv"])
     def venv():
-        sh.exec(f"{python} -m venv venv")
-        run_in_venv(f"{python} -m pip install -r requirements.txt")
+        sh.exec(f"{python} -m venv venv", cwd=os_dir_path)
+        run_in_venv(f"{python} -m pip install -r requirements.txt", cwd=os_dir_path)
 
     return venv
